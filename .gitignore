@@ -1,0 +1,11 @@
+.sites-runtime/
+.artifact-build/
+node_modules/
+.env
+.env.*
+screenshots/
+/*.zip
+.openai/
+.codex/
+.agents/
+*.log
