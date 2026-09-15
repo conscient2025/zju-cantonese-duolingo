@@ -9,3 +9,9 @@ screenshots/
 .codex/
 .agents/
 *.log
+*.pem
+*.ppk
+*.key
+id_ed25519*
+id_rsa*
+yue-server

@@ -34,7 +34,7 @@ function speaking(id,character){
 }
 
 export const course = {
-  id:'zju-yue-demo-v2', demo:true,
+  id:'zju-yue-demo', demo:true,
   // 5 翻译 + 2 配对 + 2 跟读，调整此数组即可更改顺序。
   order:['T01','M01','T02','S01','T03','M02','T04','S02','T05'],
   questions:[
