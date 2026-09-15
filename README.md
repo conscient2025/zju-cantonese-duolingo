@@ -4,6 +4,8 @@
 
 项目只维护一套当前代码，不使用版本编号。仓库为 [conscient2025/zju-cantonese-duolingo](https://github.com/conscient2025/zju-cantonese-duolingo)（私有）。
 
+在线体验：**<https://conscient.hk.cn/yue/>**。
+
 ## 玩法
 
 固定9道题：5道翻译、2道配对、2道跟读。题号固定，顺序可调整，当前测试题内容不重复。
@@ -59,15 +61,18 @@ npm start
 | `materials/` | 社员素材交付说明和录音编号 |
 | `scripts/`、`tests/` | 本地预览、素材接入和检查测试 |
 | `deploy/yue-location.conf` | 现有 Nginx 博客站点使用的配置片段 |
+| `scripts/ota.ps1`、`deploy/publish.py` | 手动上传更新、文件校验、切换和回退 |
 
 ## 部署与 SSH
 
-服务器为 Ubuntu，直接安装 Nginx，博客域名为 `conscient.hk.cn`。计划将应用放在 `https://conscient.hk.cn/yue/`，由 Nginx 提供 `dist` 中的文件。服务器不需要运行 Node.js 预览服务。
+已部署到 Ubuntu 服务器 `admin@118.178.91.193`，由现有 Nginx 提供 `https://conscient.hk.cn/yue/`，博客继续使用原有反代。服务器不需要运行 Node.js 预览服务。
 
-- [SSH连接说明](SSH连接说明.md)：为 `admin@118.178.91.193` 配置本机密钥。
-- [部署说明](部署说明.md)：上传文件、接入现有 HTTPS 配置、验收、更新和回退。
+- [SSH连接说明](SSH连接说明.md)：现有连接方式和密钥位置。
+- [部署说明](部署说明.md)：实际服务器路径、手动 OTA、验收和回退。
 
-目前尚未执行服务器部署。每个用户的答题状态保存在各自页面内存中，刷新会重新开始，多人访问不会共享答题进度。实际并发容量取决于服务器带宽和音视频大小，尚未做压力测试。
+在本机项目目录执行 `./scripts/ota.ps1` 即可手动更新；它只上传 `dist`，通过校验后切换网页，并保留一份更新前备份。修改语料素材后先运行 `npm run materials`。GitHub 推送不会自动触发部署。
+
+每个用户的答题状态保存在各自页面内存中，刷新会重新开始，多人访问不会共享答题进度。实际并发容量取决于服务器带宽和音视频大小，尚未做压力测试。
 
 ## 验证
 
