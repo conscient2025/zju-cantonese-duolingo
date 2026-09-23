@@ -1,17 +1,17 @@
-// 9道不重复的测试题：保留截图语料，并加入用户授权编写的浙大校园例句。
-// 题号与出场顺序独立。正式材料到齐后在此替换文字、粤拼与答案。
-const hk = [
-  ['今年','gam1 nin4'],['我要','ngo5 jiu3'],['去','heoi3'],['香港','hoeng1 gong2'],['追星','zeoi1 sing1'],
+// 9道题的文字、粤拼、词块和录音编号与 materials/题目说明.txt 对应。
+// 题号与出场顺序独立，材料调整时需同步此文件。
+const fuji = [
+  ['誰能','seoi4 nang4'],['憑愛意','pang4 oi3 ji3'],['要','jiu3'],['富士山','fu3 si6 saan1'],['私有','si1 jau5'],
 ];
 const eason = [
-  ['陳','can4'],['奕','jik6'],['迅首','seon3 sau2'],['首歌','sau2 go1'],['都','dou1'],['好聽','hou2 teng1'],['真係','zan1 hai6'],['有料','jau5 liu2'],
+  ['陳奕迅','can4 jik6 seon3'],['首首歌','sau2 sau2 go1'],['都','dou1'],['好聽','hou2 teng1'],['真係','zan1 hai6'],['有料','jau5 liu2'],
 ];
 const translations={
-  hk:{prompt:'今年我要去香港追星！',answer:'今年我要去香港追星！',character:'lily',items:hk},
+  fuji:{prompt:'谁能凭爱意要富士山私有。',answer:'誰能憑愛意要富士山私有。',character:'lily',items:fuji},
   eason:{prompt:'陈奕迅每首歌都好听，真是有实力。',answer:'陳奕迅首首歌都好聽，真係有料。',character:'oscar',items:eason},
-  zju:{prompt:'我在浙大读书。',answer:'我喺浙大讀書。',character:'lily',items:[['我','ngo5'],['喺','hai2'],['浙大','zit3 daai6'],['讀書','duk6 syu1']]},
+  freedom:{prompt:'原谅我这一生不羁放纵爱自由',answer:'原諒我這一生不羈放縱愛自由',character:'lily',items:[['原諒我','jyun4 loeng6 ngo5'],['這一生','ze5 jat1 sang1'],['不羈','bat1 gei1'],['放縱','fong3 zung3'],['愛','oi3'],['自由','zi6 jau4']]},
   campus:{prompt:'我们一起去紫金港。',answer:'我哋一齊去紫金港。',character:'oscar',items:[['我哋','ngo5 dei6'],['一齊','jat1 cai4'],['去','heoi3'],['紫金港','zi2 gam1 gong2']]},
-  dinner:{prompt:'下课后去吃饭吧！',answer:'落堂之後去食飯啦！',character:'lily',items:[['落堂','lok6 tong4'],['之後','zi1 hau6'],['去','heoi3'],['食飯','sik6 faan6'],['啦','laa1']]},
+  dreams:{prompt:'做人如果没有梦想，和一条咸鱼有什么区别？',answer:'做人如果冇夢想，同條鹹魚有乜分別？',character:'lily',items:[['做人','zou6 jan4'],['如果','jyu4 gwo2'],['冇','mou5'],['夢想','mung6 soeng2'],['同條','tung4 tiu4'],['鹹魚','haam4 jyu2'],['有','jau5'],['乜','mat1'],['分別','fan1 bit6']]},
 };
 function translation(id, variant) {
   const {items,prompt,answer,character} = translations[variant];
@@ -24,13 +24,13 @@ function translation(id, variant) {
 function matching(id, items) {
   return {id,type:'match',pairs:items.map(([text,meaning],i)=>({id:`p${i+1}`,text,meaning,audioKey:`${id}/${String(i+1).padStart(2,'0')}`}))};
 }
-const readingWords = [
-  ['聽','ting1'],['日','jat6'],['記','gei3'],['得','dak1'],['搶','coeng2'],['五','ng5'],['月','jyut6'],['天','tin1'],['演','jin2'],['唱','coeng3'],['會','wui6'],['嘅','ge3'],['飛！','fei1'],
-];
-const welcomeWords=[['歡迎','fun1 jing4'],['嚟','lai4'],['浙大','zit3 daai6'],['粵語社！','jyut6 jyu5 se5']];
+const readings={
+  S01:{meaning:'命运就算颠沛流离，命运就算曲折离奇。',items:[['命運','ming6 wan6'],['就','zau6'],['算','syun3'],['顛沛流離，','din1 pui3 lau4 lei4'],['命運','ming6 wan6'],['就','zau6'],['算','syun3'],['曲折離奇。','kuk1 zit3 lei4 kei4']]},
+  S02:{meaning:'我在浙江大学读书。',items:[['我','ngo5'],['喺','hai2'],['浙江','zit3 gong1'],['大學','daai6 hok6'],['讀書。','duk6 syu1']]},
+};
 function speaking(id,character){
-  const items=character==='bear'?readingWords:welcomeWords;
-  return {id,type:'speak',character,audioKey:id,prompt:items.map(([text])=>text).join(''),meaning:character==='bear'?'明天记得抢五月天演唱会的票！':'欢迎来到浙大粤语社！',words:items.map(([text,jyutping])=>({text,jyutping}))};
+  const {items,meaning}=readings[id];
+  return {id,type:'speak',character,audioKey:id,prompt:items.map(([text])=>text).join(''),meaning,words:items.map(([text,jyutping])=>({text,jyutping}))};
 }
 
 export const course = {
@@ -38,10 +38,10 @@ export const course = {
   // 5 翻译 + 2 配对 + 2 跟读，调整此数组即可更改顺序。
   order:['T01','M01','T02','S01','T03','M02','T04','S02','T05'],
   questions:[
-    translation('T01','hk'), translation('T02','eason'),
-    translation('T03','zju'), translation('T04','campus'), translation('T05','dinner'),
-    matching('M01',[['掛','挂'],['升職','升职'],['阿頭','领导'],['追星','追星']]),
-    matching('M02',[['學生證','学生证'],['單車','自行车'],['宿舍','宿舍'],['圖書館','图书馆']]),
+    translation('T01','fuji'), translation('T02','eason'),
+    translation('T03','freedom'), translation('T04','campus'), translation('T05','dreams'),
+    matching('M01',[['中意','喜欢'],['單車','自行车'],['靚女','美女'],['靚仔','帅哥']]),
+    matching('M02',[['蝦餃','虾饺'],['鳳爪','鸡脚'],['排骨','排骨'],['牛肉丸','牛肉丸']]),
     speaking('S01','bear'),speaking('S02','lily'),
   ],
   ad:{duration:15},
