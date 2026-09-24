@@ -1,10 +1,10 @@
 import { course } from './content/course.js';
-import { Lesson, AdGate } from './engine.js';
+import { Lesson } from './engine.js';
 
 const app=document.querySelector('#app'),dialog=document.querySelector('#settings'),toast=document.querySelector('#toast');
 const lesson=new Lesson(course);
-let media={audio:{},advertisement:null,qrCode:null};
-let sound=true,showJyutping=true,toastTimer,pairTimer,adFrame,adVideo,adGate,adCleanup=()=>{},audioEpoch=0;
+let media={audio:{},advertisement:null,qrCodes:[]};
+let sound=true,showJyutping=true,toastTimer,pairTimer,adFrame,adVideo,adCleanup=()=>{},audioEpoch=0;
 let lastCorrectEvent=0,streakAnimation,progressAnimation;
 const wordFlights=new Set(),reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const player=new Audio();player.preload='auto';
@@ -133,7 +133,10 @@ function summary(){
  const s=lesson.stats;
  return `<section class="summary"><div class="summary-main">${character('duo','success','large')}<h1>不愧是你！</h1><p>你的中文（粤语）技能正在悄悄升级</p><div class="stats"><div class="stat yellow"><span>正确题数</span><div>${icon('lightning')}<strong>${s.correct}<small> / 9</small></strong></div></div><div class="stat green"><span>正确率</span><div>${icon('target')}<strong>${s.accuracy}%</strong></div></div><div class="stat blue"><span>用时</span><div>${icon('clock')}<strong>${timeText(s.milliseconds)}</strong></div></div></div></div><footer class="lesson-footer"><button class="primary blue" data-action="advertisement">继续</button></footer></section>`;
 }
-function qr(){return `<section class="qr-screen"><h1>浙江大学学生粤语社</h1><p>期待与你见面！</p>${media.qrCode?`<img class="qr-image" src="${e(media.qrCode)}" alt="粤语社招新二维码">`:'<div class="qr-missing"><span>粤语社二维码</span><small>待提供素材后显示</small></div>'}<button class="text-button" data-action="restart">再玩一次</button></section>`;}
+function qr(){
+ const codes=media.qrCodes?.length?media.qrCodes:media.qrCode?[{id:'signup',label:'报名',title:'加入粤语社',src:media.qrCode}]:[];
+ return `<section class="qr-screen"><header class="qr-heading"><span class="qr-eyebrow">浙江大学学生粤语社</span><h1 tabindex="-1">期待与你见面！</h1></header>${codes.length?`<div class="qr-list">${codes.map(q=>`<section class="qr-card" aria-labelledby="qr-title-${e(q.id)}"><div class="qr-frame"><img class="qr-image ${q.pixelated?'qr-pixelated':''}" src="${e(q.src)}" alt="${e(q.title)}二维码"></div><div class="qr-details"><h2 id="qr-title-${e(q.id)}">${e(q.title)}</h2></div></section>`).join('')}</div>`:'<div class="qr-missing"><span>粤语社二维码</span><small>待提供素材后显示</small></div>'}<button class="text-button" data-action="restart">再玩一次</button></section>`;
+}
 function render(focusHeading=false){
  finishWordFlights();
  const active=document.activeElement,wordFocus=active?.dataset.word,actionFocus=active?.dataset.action;
@@ -145,7 +148,7 @@ function render(focusHeading=false){
  }
  else if(lesson.phase==='summary')app.innerHTML=summary();
  else if(lesson.phase==='qr'){
-  app.innerHTML=qr();app.querySelector('.qr-image')?.addEventListener('error',event=>{event.target.outerHTML='<div class="qr-missing"><span>二维码加载失败</span><small>请联系现场粤社工作人员</small></div>';});
+  app.innerHTML=qr();app.querySelectorAll('.qr-image').forEach(image=>image.addEventListener('error',event=>{event.target.outerHTML='<div class="qr-missing" role="status"><span>二维码加载失败</span><small>请联系现场粤社工作人员</small></div>';}));
  }
  document.body.classList.toggle('hide-jyutping',!showJyutping);
  if(focusHeading){window.scrollTo({top:0,behavior:'instant'});app.querySelector('h1')?.focus({preventScroll:true});}
@@ -156,7 +159,7 @@ function cleanupQuestion(){finishWordFlights();clearTimeout(pairTimer);stopAudio
 function advance(){cleanupQuestion();lesson.advance();render(true);}
 function settings(){
  stopAudio();
- dialog.innerHTML=`<form method="dialog"><div class="dialog-title"><h2 id="settings-title">设置</h2><button class="icon-button" aria-label="关闭设置">${icon('close')}</button></div><label class="setting-row">播放声音<input id="sound-option" type="checkbox" ${sound?'checked':''}></label><label class="setting-row">显示粤拼<input id="jyutping-option" type="checkbox" ${showJyutping?'checked':''}></label><p class="demo-note">当前使用测试语料。<br>社员录音、广告和二维码待补充。</p><button class="primary blue">继续练习</button><button class="text-button" type="button" id="ask-restart">重新开始本轮</button><div id="restart-confirm" hidden><p>重新开始会清空本轮答题进度。</p><button type="button" class="secondary" id="confirm-restart">确认重新开始</button></div></form>`;
+ dialog.innerHTML=`<form method="dialog"><div class="dialog-title"><h2 id="settings-title">设置</h2><button class="icon-button" aria-label="关闭设置">${icon('close')}</button></div><label class="setting-row">播放声音<input id="sound-option" type="checkbox" ${sound?'checked':''}></label><label class="setting-row">显示粤拼<input id="jyutping-option" type="checkbox" ${showJyutping?'checked':''}></label><button class="primary blue">继续练习</button><button class="text-button" type="button" id="ask-restart">重新开始本轮</button><div id="restart-confirm" hidden><p>重新开始会清空本轮答题进度。</p><button type="button" class="secondary" id="confirm-restart">确认重新开始</button></div></form>`;
  dialog.querySelector('#sound-option').onchange=event=>{sound=event.target.checked;if(!sound)stopAudio();};
  dialog.querySelector('#jyutping-option').onchange=event=>{showJyutping=event.target.checked;render();};
  dialog.querySelector('#ask-restart').onclick=()=>dialog.querySelector('#restart-confirm').hidden=false;
@@ -182,53 +185,49 @@ app.addEventListener('click',event=>{
 });
 
 function startAd(){
- cleanupQuestion();adCleanup();adGate=new AdGate(course.ad.duration);
+ cleanupQuestion();adCleanup();
  const isDemo=!media.advertisement;
  app.innerHTML=`<section class="ad-screen"><div class="ad-top"><span class="ad-counter" aria-label="广告剩余秒数">15</span><button class="icon-button ad-sound" aria-label="${sound?'关闭':'开启'}广告声音">${icon(sound?'speaker':'muted')}</button></div>${isDemo?'<div class="ad-placeholder"><span class="ad-placeholder-label">15 秒广告占位演示</span><h1>浙江大学<br>学生粤语社</h1><p>正式广告视频待补充</p></div>':'<video id="ad-video" playsinline webkit-playsinline preload="auto" disablepictureinpicture disableremoteplayback></video>'}<button class="ad-play" hidden aria-label="播放广告">${icon('play')}<span>点击播放</span></button><p class="ad-error" role="status" hidden></p></section>`;
  const counter=app.querySelector('.ad-counter'),soundButton=app.querySelector('.ad-sound'),playButton=app.querySelector('.ad-play'),errorLine=app.querySelector('.ad-error');
  let destroyed=false;
- function finish(){if(lesson.finishAdvertisement(adGate)){destroyed=true;cancelAnimationFrame(adFrame);adCleanup();adVideo?.pause();render(true);}}
+ function finish(){if(!destroyed&&lesson.finishAdvertisement()){destroyed=true;cancelAnimationFrame(adFrame);adCleanup();adVideo?.pause();render(true);}}
  soundButton.onclick=()=>{sound=!sound;if(adVideo)adVideo.muted=!sound;soundButton.innerHTML=icon(sound?'speaker':'muted');soundButton.setAttribute('aria-label',`${sound?'关闭':'开启'}广告声音`);};
  if(isDemo){
-  let elapsed=0,last=performance.now();adGate.update(0,last,true,!document.hidden);
-  const visibility=()=>{last=performance.now();adGate.update(elapsed,last,!document.hidden,!document.hidden);};
+  let elapsed=0,last=performance.now();
+  const visibility=()=>{last=performance.now();};
   document.addEventListener('visibilitychange',visibility);
   const tick=now=>{
    if(destroyed)return;
    if(!document.hidden)elapsed=Math.min(course.ad.duration,elapsed+Math.min((now-last)/1000,0.1));
-   adGate.update(elapsed,now,!document.hidden,!document.hidden);last=now;counter.textContent=adGate.remaining;
-   if(elapsed>=course.ad.duration){adGate.markEnded();finish();}
+   last=now;counter.textContent=Math.max(0,Math.ceil(course.ad.duration-elapsed));
+   if(elapsed>=course.ad.duration)finish();
    if(!destroyed)adFrame=requestAnimationFrame(tick);
   };
   adCleanup=()=>{destroyed=true;document.removeEventListener('visibilitychange',visibility);cancelAnimationFrame(adFrame);};
   adFrame=requestAnimationFrame(tick);return;
  }
- adVideo=app.querySelector('#ad-video');adVideo.muted=!sound;
- let lastSafeTime=0,recoveringSeek=false;
- const showPlay=()=>{if(!destroyed)playButton.hidden=false;};
- const begin=async()=>{errorLine.hidden=true;playButton.hidden=true;if(adVideo.error)adVideo.load();try{await adVideo.play();}catch{showPlay();}};
- playButton.onclick=begin;
- const visibility=()=>{if(document.hidden){adGate.update(adVideo.currentTime,performance.now(),false,false);adVideo.pause();}else showPlay();};
- document.addEventListener('visibilitychange',visibility);
- adVideo.addEventListener('play',()=>{playButton.hidden=true;adGate.update(adVideo.currentTime,performance.now(),true,!document.hidden);});
- adVideo.addEventListener('pause',()=>{adGate.update(adVideo.currentTime,performance.now(),false,!document.hidden);if(!adVideo.ended&&!document.hidden)showPlay();});
- adVideo.addEventListener('ratechange',()=>{if(adVideo.playbackRate!==1)adVideo.playbackRate=1;});
- adVideo.addEventListener('seeking',()=>{if(!recoveringSeek&&Math.abs(adVideo.currentTime-lastSafeTime)>0.35){recoveringSeek=true;adVideo.currentTime=lastSafeTime;}});
- adVideo.addEventListener('seeked',()=>{recoveringSeek=false;adGate.update(adVideo.currentTime,performance.now(),!adVideo.paused,!document.hidden);});
- adVideo.addEventListener('ended',()=>{
-  adGate.update(adVideo.currentTime,performance.now(),true,!document.hidden);adGate.markEnded();
-  if(adGate.complete)finish();
-  else{errorLine.textContent='广告尚未完整播放，请重新播放。';errorLine.hidden=false;playButton.hidden=false;playButton.onclick=()=>{adGate=new AdGate(course.ad.duration);lastSafeTime=0;recoveringSeek=true;adVideo.currentTime=0;void begin();};}
- });
- adVideo.addEventListener('error',()=>{errorLine.textContent='广告加载失败，请检查网络后点击重试。';errorLine.hidden=false;playButton.hidden=false;});
- const tick=now=>{
-  if(destroyed)return;
-  const playing=!adVideo.paused&&!adVideo.seeking&&!document.hidden;adGate.update(adVideo.currentTime,now,playing,!document.hidden);
-  if(playing)lastSafeTime=adVideo.currentTime;counter.textContent=adGate.remaining;adFrame=requestAnimationFrame(tick);
+ adVideo=app.querySelector('#ad-video');
+ const video=adVideo;video.muted=!sound;
+ const updateCounter=()=>{
+  const duration=Number.isFinite(video.duration)?video.duration:course.ad.duration;
+  counter.textContent=Math.max(0,Math.ceil(duration-video.currentTime));
  };
- adCleanup=()=>{destroyed=true;cancelAnimationFrame(adFrame);document.removeEventListener('visibilitychange',visibility);};
- adVideo.src=media.advertisement;adFrame=requestAnimationFrame(tick);void begin();
+ const showPlay=()=>{if(!destroyed)playButton.hidden=false;};
+ const begin=async()=>{errorLine.hidden=true;playButton.hidden=true;if(video.error)video.load();try{await video.play();}catch{showPlay();}};
+ playButton.onclick=begin;
+ const visibility=()=>{if(document.hidden)video.pause();else if(video.ended)finish();else if(video.paused)showPlay();};
+ document.addEventListener('visibilitychange',visibility);
+ video.addEventListener('loadedmetadata',updateCounter);
+ video.addEventListener('timeupdate',updateCounter);
+ video.addEventListener('play',()=>{playButton.hidden=true;});
+ video.addEventListener('pause',()=>{if(!video.ended&&!document.hidden)showPlay();});
+ // The player's end event is sufficient; do not audit elapsed watch time.
+ video.addEventListener('ended',finish);
+ video.addEventListener('error',()=>{if(!destroyed){errorLine.textContent='广告加载失败，请检查网络后点击重试。';errorLine.hidden=false;showPlay();}});
+ adCleanup=()=>{destroyed=true;document.removeEventListener('visibilitychange',visibility);};
+ video.src=media.advertisement;void begin();
 }
+
 document.addEventListener('visibilitychange',()=>{if(document.hidden){lesson.pause();stopAudio();}else lesson.resume();});
 window.addEventListener('pagehide',()=>{stopAudio();adVideo?.pause();});
 window.addEventListener('resize',()=>{finishWordFlights();layoutAnswerRows();});

@@ -107,21 +107,5 @@ export class Lesson {
   }
   complete(){this.pause();this.phase='summary';this.feedback=null;}
   startAdvertisement(){if(this.phase!=='summary')return false;this.phase='ad';return true;}
-  finishAdvertisement(gate){if(this.phase!=='ad'||!gate?.complete)return false;this.phase='qr';return true;}
-}
-
-// Track actually played forward intervals, rejecting seeks, background time and fast playback.
-export class AdGate {
-  constructor(duration=15){this.duration=duration;this.watched=0;this.mediaWatched=0;this.wallWatched=0;this.lastMedia=0;this.lastClock=null;this.playing=false;this.ended=false;}
-  update(mediaTime,clockMs,playing=true,visible=true){
-    const delta=mediaTime-this.lastMedia;
-    if(this.lastClock!==null&&this.playing&&playing&&visible&&delta>=0){
-      const wall=Math.max(0,(clockMs-this.lastClock)/1000);
-      if(delta<=wall+0.25){this.mediaWatched+=delta;this.wallWatched+=wall;this.watched=Math.min(this.mediaWatched,this.wallWatched);}
-    }
-    this.lastMedia=mediaTime;this.lastClock=clockMs;this.playing=playing&&visible;
-  }
-  markEnded(){this.ended=true;}
-  get complete(){return this.ended&&this.watched>=this.duration-0.15;}
-  get remaining(){return Math.max(0,Math.ceil(this.duration-this.watched));}
+  finishAdvertisement(){if(this.phase!=='ad')return false;this.phase='qr';return true;}
 }

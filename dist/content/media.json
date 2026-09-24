@@ -1,5 +1,65 @@
 {
-  "audio": {},
-  "advertisement": null,
-  "qrCode": null
+  "audio": {
+    "T01/01": "./media/T01/01.mp3",
+    "T01/02": "./media/T01/02.mp3",
+    "T01/03": "./media/T01/03.mp3",
+    "T01/04": "./media/T01/04.mp3",
+    "T01/05": "./media/T01/05.mp3",
+    "T02/01": "./media/T02/01.mp3",
+    "T02/02": "./media/T02/02.mp3",
+    "T02/03": "./media/T02/03.mp3",
+    "T02/04": "./media/T02/04.mp3",
+    "T02/05": "./media/T02/05.mp3",
+    "T02/06": "./media/T02/06.mp3",
+    "T03/01": "./media/T03/01.mp3",
+    "T03/02": "./media/T03/02.mp3",
+    "T03/03": "./media/T03/03.mp3",
+    "T03/04": "./media/T03/04.mp3",
+    "T03/05": "./media/T03/05.mp3",
+    "T03/06": "./media/T03/06.mp3",
+    "T04/01": "./media/T04/01.mp3",
+    "T04/02": "./media/T04/02.mp3",
+    "T04/03": "./media/T04/03.mp3",
+    "T04/04": "./media/T04/04.mp3",
+    "T05/01": "./media/T05/01.mp3",
+    "T05/02": "./media/T05/02.mp3",
+    "T05/03": "./media/T05/03.mp3",
+    "T05/04": "./media/T05/04.mp3",
+    "T05/05": "./media/T05/05.mp3",
+    "T05/06": "./media/T05/06.mp3",
+    "T05/07": "./media/T05/07.mp3",
+    "T05/08": "./media/T05/08.mp3",
+    "T05/09": "./media/T05/09.mp3",
+    "M01/01": "./media/M01/01.mp3",
+    "M01/02": "./media/M01/02.mp3",
+    "M01/03": "./media/M01/03.mp3",
+    "M01/04": "./media/M01/04.mp3",
+    "M02/01": "./media/M02/01.mp3",
+    "M02/02": "./media/M02/02.mp3",
+    "M02/03": "./media/M02/03.mp3",
+    "M02/04": "./media/M02/04.mp3",
+    "S01": "./media/S01.mp3",
+    "S02": "./media/S02.mp3"
+  },
+  "advertisement": "./media/advertisement.mp4",
+  "qrCodes": [
+    {
+      "id": "signup",
+      "title": "填写报名表",
+      "label": "报名表",
+      "src": "./media/qr-signup.svg"
+    },
+    {
+      "id": "group",
+      "title": "加入 QQ 纳新群",
+      "label": "纳新群",
+      "src": "./media/qr-group.jpg"
+    },
+    {
+      "id": "account",
+      "title": "关注粤社公众号",
+      "label": "公众号",
+      "src": "./media/qr-account.svg"
+    }
+  ]
 }

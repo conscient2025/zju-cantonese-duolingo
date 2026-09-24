@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Lesson,AdGate,validateCourse,PROGRESS_WEIGHTS} from '../dist/engine.js';
+import {Lesson,validateCourse,PROGRESS_WEIGHTS} from '../dist/engine.js';
 import {course} from '../dist/content/course.js';
 
 function answer(lesson,correct=true){
@@ -93,24 +93,12 @@ test('configuration rejects missing questions and wrong type distribution',()=>{
  assert.throws(()=>validateCourse({...course,order:course.order.slice(0,8)}));
  assert.throws(()=>validateCourse({...course,order:[...course.order.slice(0,8),'T01']}));
 });
-test('advertisement requires genuinely played duration and ended event before revealing QR',()=>{
- const gate=new AdGate(15);gate.update(0,0);
- for(let i=1;i<=140;i++)gate.update(i/10,i*100);
- gate.markEnded();assert.equal(gate.complete,false);
- for(let i=141;i<=150;i++)gate.update(i/10,i*100);
- assert.equal(gate.complete,true);
- const lesson=new Lesson(course);assert.equal(lesson.startAdvertisement(),false);
+test('advertisement completion advances to QR without a watch-duration gate',()=>{
+ const lesson=new Lesson(course);
+ assert.equal(lesson.startAdvertisement(),false);assert.equal(lesson.finishAdvertisement(),false);
  while(lesson.isQuestion)answer(lesson);
- assert.equal(lesson.finishAdvertisement(gate),false);lesson.startAdvertisement();
- assert.equal(lesson.finishAdvertisement(new AdGate()),false);assert.equal(lesson.finishAdvertisement(gate),true);assert.equal(lesson.phase,'qr');
-});
-test('seeking to the end, background waiting and fast playback cannot satisfy the ad gate',()=>{
- const seek=new AdGate();seek.update(0,0);seek.update(15,20);seek.markEnded();assert.equal(seek.complete,false);
- const hidden=new AdGate();hidden.update(0,0);hidden.update(15,15000,true,false);hidden.markEnded();assert.equal(hidden.complete,false);
- const fast=new AdGate();fast.update(0,0);for(let i=1;i<=150;i++)fast.update(i/10,i*50);fast.markEnded();assert.equal(fast.complete,false);
-});
-test('normal per-frame media clock jitter does not reject a fully played advertisement',()=>{
- const gate=new AdGate();gate.update(0,0);
- for(let i=1;i<=900;i++){const media=i===900?15:i/60+(i%2?0.003:-0.003);gate.update(media,i/60*1000);}
- gate.markEnded();assert.equal(gate.complete,true);
+ assert.equal(lesson.finishAdvertisement(),false);
+ assert.equal(lesson.startAdvertisement(),true);
+ assert.equal(lesson.finishAdvertisement(),true);assert.equal(lesson.phase,'qr');
+ assert.equal(lesson.finishAdvertisement(),false);
 });

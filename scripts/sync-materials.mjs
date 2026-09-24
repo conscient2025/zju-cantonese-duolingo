@@ -5,7 +5,7 @@ import {course} from '../dist/content/course.js';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const materialRoot=path.join(root,'materials'),output=path.join(root,'dist','media');
-const manifest={audio:{},advertisement:null,qrCode:null};
+const manifest={audio:{},advertisement:null,qrCodes:[]};
 const acceptedAudio=new Set(['.mp3','.m4a','.wav']);
 const missing=[];
 async function findFile(directory,stem,extensions){
@@ -31,8 +31,20 @@ for(const q of course.questions){
 }
 const ad=await findFile(path.join(materialRoot,'广告'),'粤社广告',new Set(['.mp4']));
 if(ad)manifest.advertisement=await copy(ad,'advertisement');
-const qr=await findFile(path.join(materialRoot,'二维码'),'招新二维码',new Set(['.png','.jpg','.jpeg','.webp']));
-if(qr)manifest.qrCode=await copy(qr,'qr-code');
+const qrDefinitions=[
+ {id:'signup',name:'报名表',title:'填写报名表'},
+ {id:'group',name:'纳新群',title:'加入 QQ 纳新群'},
+ {id:'account',name:'公众号',title:'关注粤社公众号'},
+];
+for(const {name,...details} of qrDefinitions){
+ const source=await findFile(path.join(materialRoot,'二维码'),name,new Set(['.svg','.png','.jpg','.jpeg','.webp']));
+ if(source)manifest.qrCodes.push({...details,label:name,src:await copy(source,`qr-${details.id}`)});
+}
+// Keep accepting the original single-image material for existing installations.
+if(!manifest.qrCodes.length){
+ const source=await findFile(path.join(materialRoot,'二维码'),'招新二维码',new Set(['.svg','.png','.jpg','.jpeg','.webp']));
+ if(source)manifest.qrCodes.push({id:'signup',label:'报名',title:'加入粤语社',src:await copy(source,'qr-code')});
+}
 await mkdir(path.join(root,'dist','content'),{recursive:true});
 await writeFile(path.join(root,'dist','content','media.json'),JSON.stringify(manifest,null,2)+'\n');
-process.stdout.write(`已接入 ${Object.keys(manifest.audio).length} 段录音；待补充 ${missing.length} 段。\n广告：${ad?'已接入':'占位演示'}；二维码：${qr?'已接入':'待补充'}。\n`);
+process.stdout.write(`已接入 ${Object.keys(manifest.audio).length} 段录音；待补充 ${missing.length} 段。\n缺失录音：${missing.join('、')||'无'}\n广告：${ad?'已接入':'占位演示'}；二维码：${manifest.qrCodes.length} 张。\n`);
